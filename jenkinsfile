@@ -67,7 +67,7 @@ pipeline {
                         --tag ${CI_IMAGE} \\
                         --file Dockerfile \\
                         .
-ngrok
+
                     echo "✅ Build successful"
                     docker images ${CI_IMAGE}
                 """
