@@ -20,7 +20,7 @@ pipeline {
 
     environment {
         // Application configuration
-        APP_NAME        = 'laravel-app'
+        APP_NAME        = 'sujit-laravel-app'
         
         // Use Jenkins built-in Git commit SHA
         IMAGE_TAG       = "${env.GIT_COMMIT.take(7)}"
@@ -29,10 +29,10 @@ pipeline {
         DEPLOY_SERVER   = '185.199.53.175'
         DEPLOY_USER     = 'sujit-jenkins'
         DEPLOY_PORT     = '22'
-        APP_PORT        = '8083'
+        APP_PORT        = '8000'
         
         // .env file path on production server
-        ENV_FILE        = '/home/sujit-jenkins/.env'
+        ENV_FILE        = '/home/jenkins/.local.env'
     }
 
     stages {
@@ -174,15 +174,23 @@ pipeline {
                                     # Stop old container
                                     docker stop ${APP_NAME} 2>/dev/null || true
                                     docker rm   ${APP_NAME} 2>/dev/null || true
+
+                                    # Removing the volume ensures that the NEW code inside the 
+                                    # docker image is copied to the volume for Nginx to see.
+                                    docker volume rm laravel-data 2>/dev/null || true
                                     
                                     # Start new container with .env file
                                     docker run -d \\
                                         --name ${APP_NAME} \\
                                         --restart unless-stopped \\
-                                        --network sujit-network \\
+                                        --network private-net \\
                                         --env-file ${ENV_FILE} \\
-                                        -p ${APP_PORT}:8080 \\
+                                        -v laravel-data:/var/www \\
                                         \${DOCKER_IMAGE}:${IMAGE_TAG}
+
+                                    # Ensures the new routes and config are loaded immediately
+                                    docker exec ${APP_NAME} php artisan route:clear
+                                    docker exec ${APP_NAME} php artisan config:clear
                                     
                                     # Verify
                                     sleep 5
