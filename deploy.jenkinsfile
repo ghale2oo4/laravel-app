@@ -20,7 +20,7 @@ pipeline {
 
     environment {
         // Application configuration
-        APP_NAME        = 'sujit-laravel-app'
+        APP_NAME        = 'laravel-app'
         
         // Use Jenkins built-in Git commit SHA
         IMAGE_TAG       = "${env.GIT_COMMIT.take(7)}"
